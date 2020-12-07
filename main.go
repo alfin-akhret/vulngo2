@@ -1,13 +1,14 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/kennygrant/sanitize"
 )
 
 func main() {
@@ -36,19 +37,17 @@ func sayYourName(w http.ResponseWriter, r *http.Request) {
 		Name = strings.Join(v, ",")
 	}
 	fmt.Println(Name)
-	err := sanitize(Name)
-	if err != nil {
-		fmt.Fprintf(w, fmt.Sprintf("%s", err))
-	}
-	fmt.Println(Name)
-	fmt.Fprintf(w, Name)
+	str := validate(Name)
+	fmt.Println(str)
+	fmt.Fprintf(w, str)
 }
 
-func sanitize(str string) error {
+func validate(str string) string {
+	sanitizedStr := str
 	re := regexp.MustCompile("^[a-zA-Z0-9_]*$")
 	if !re.MatchString(str) {
-		e := errors.New("Invalid input")
-		return e
+		sanitizedStr = sanitize.Accents(str)
+		return sanitizedStr
 	}
-	return nil
+	return sanitizedStr
 }
